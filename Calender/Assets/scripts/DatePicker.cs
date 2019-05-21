@@ -2,163 +2,159 @@
 using UnityEngine.UI;
 using System;
 using System.Collections;
+using System.Globalization;
 
 public class DatePicker : MonoBehaviour {
+  
+    private DayToggle[] DayToggles = new DayToggle[7 * 6];
 
-    public DayScript[] DayList;
+    public DayToggle DayToggleTemplate;
+    public Text DayNameLabelTemplate;
+    public GridLayoutGroup DayContainer;
     public Text SelectedDateText;
     public Text CurrentMonth;
     public Text CurrentYear;
     public string DateFormat = "dd-MM-yyyy";
     public bool ForwardPickOnly = false;
-    DateTime SelectedDate = DateTime.Today;
-    DateTime ReferenceDate = DateTime.Today;
+    private DateTime m_SelectedDate;
 
+    public DateTime SelectedDate
+    {
+        get { return m_SelectedDate; }
+        private set
+        {
+            if (m_SelectedDate == value)
+                return;
+            m_SelectedDate = value;
+            SelectedDateText.text = value.ToString(DateFormat);
+            ReferenceDate = new DateTime( value.Year, value.Month, 1);
+        }
+    }
+    DateTime m_ReferenceDate;
+    public DateTime ReferenceDate
+    {
+        get { return m_ReferenceDate; }
+        private set
+        {
+            if ((ForwardPickOnly) 
+                && (value.Year < DateTime.Today.Year 
+                || (value.Year == DateTime.Today.Year && value.Month < DateTime.Today.Month)))
+            {
+                return;
+            }
+
+            m_ReferenceDate = value;
+            CurrentMonth.text = value.ToString("MMMMM");
+            CurrentYear.text = value.Year.ToString();
+            DisplayMonthDays();
+        }
+    }
+
+    public DayOfWeek startDayOfWeek;
     void Start()
     {
-        DayList = gameObject.GetComponentsInChildren<DayScript>();
-        SetupVariables();
+        GenerateDaysNames();
+        GenerateDaysToggles();
+        SelectedDate = DateTime.Today;
+        
     }
-    string GetMonth(int index)
-    {
-        string result = "January";
-        switch(index)
-        {
-            case 1:
-                result = "January";
-                break;
-            case 2:
-                result = "February";
-                break;
-            case 3:
-                result = "March";
-                break;
-            case 4:
-                result = "April";
-                break;
-            case 5:
-                result = "May";
-                break;
-            case 6:
-                result = "Jun";
-                break;
-            case 7:
-                result = "July";
-                break;
-            case 8:
-                result = "August";
-                break;
-            case 9:
-                result = "September";
-                break;
-            case 10:
-                result = "October";
-                break;
-            case 11:
-                result = "November";
-                break;
-            case 12:
-                result = "December";
-                break;
-            default:
-                Debug.Log(" Error : Improbable month");
-                break;
+ 
+
+    public void GenerateDaysNames(){
+        int dayOfWeek = (int)startDayOfWeek;
+        for (int d = 1; d <= 7; d++){       
+            string day_name = Enum.GetName(typeof(DayOfWeek), dayOfWeek);
+            var DayNameLabel = Instantiate(DayNameLabelTemplate);
+            DayNameLabel.transform.SetParent(DayContainer.transform);
+            DayNameLabel.GetComponentInChildren<Text>().text = day_name;
+            dayOfWeek++;
+            if (dayOfWeek >= 7){
+                dayOfWeek = 0;
+            }
         }
-        return result;
     }
-    void SetupVariables()
-    {
-        SelectedDateText.text = SelectedDate.ToString(DateFormat);
-        CurrentMonth.text = GetMonth(ReferenceDate.Month);
-        CurrentYear.text = ReferenceDate.Year.ToString();
-        Generate();
+    public void GenerateDaysToggles(){
+        for (int i = 0; i < DayToggles.Length; i++){
+            var DayToggle = Instantiate(DayToggleTemplate);
+            DayToggle.transform.SetParent(DayContainer.transform);
+            DayToggle.GetComponentInChildren<Text>().text = string.Empty;
+            DayToggle.onDateSelected.AddListener(OnDaySelected);
+            DayToggles[i] = DayToggle;
+        }
     }
-    public void Generate()
+
+    private void DisplayMonthDays()
     {
-        int month = ReferenceDate.Month; 
-        int year = ReferenceDate.Year;
-        DateTime dateTime = new DateTime(year, month, 1);
-        int day = (int)dateTime.DayOfWeek;
-        int no_of_days_in_month = DateTime.DaysInMonth(year, month);
-        for (int i = 0; i <  DayList.Length; i++)
+        int monthdays = DateTime.DaysInMonth(ReferenceDate.Year, ReferenceDate.Month);
+ 
+        int day_index = 1;
+        DateTime day_datetime = new DateTime(ReferenceDate.Year, ReferenceDate.Month, day_index);
+
+        int dayOffset = (int)day_datetime.DayOfWeek - (int)startDayOfWeek;
+        if ((int)day_datetime.DayOfWeek < (int)startDayOfWeek)
         {
-            if (i < day || i >= (day + no_of_days_in_month))
+            dayOffset = 7 + dayOffset;
+        }
+
+        for (int i = 0; i < DayToggles.Length; i++)
+        {
+            if (day_index <= monthdays)
             {
-                DayList[i].gameObject.SetActive(false);
-                continue;
+                day_datetime = day_datetime.AddDays(1);
             }
-            DateTime date = new DateTime(year, month, (i - day) + 1);
-            if (ForwardPickOnly && date < DateTime.Today)
-            {
-                DayList[i].gameObject.SetActive(false);
-                continue;
+            
+            if ((i < dayOffset)
+                || day_index > monthdays){
+                SetDayToggleEmpty(DayToggles[i]);
+            }else{
+          
+                SetDayToggle(DayToggles[i], day_datetime);
+                day_index++;
             }
-            DayList[i].gameObject.SetActive(true);
-            DayList[i].Setup(date, SelectedDate == date);
-            Button btn = DayList[i].GetComponentInChildren<Button>();
-            btn.onClick.RemoveAllListeners();
-            btn.onClick.AddListener(() => {
-                OnDaySelected(date);
-            });
         }        
     }
 
-    bool ValidateForwardPickOnly(DateTime date)
-    {
-        if (!ForwardPickOnly)
-            return true;
-        if (date < DateTime.Today)
-            OnToday();
-        return true;
+    void SetDayToggleEmpty(DayToggle dayToggle){
+        dayToggle.interactable = false;
+        dayToggle.isOn = false;
+        dayToggle.ClearText();
     }
+
+    void SetDayToggle(DayToggle dayToggle, DateTime toggleDate){
+        dayToggle.interactable = toggleDate >= DateTime.Today;
+        dayToggle.SetText(toggleDate.Day.ToString());
+        dayToggle.isOn = SelectedDate == toggleDate;
+        dayToggle.dateTime = toggleDate;
+    }
+
     public void OnYearInc()
     {
-        if (!ValidateForwardPickOnly(ReferenceDate.AddYears(1)))
-            return;
         ReferenceDate = ReferenceDate.AddYears(1);
-        SetupVariables();
     }
     public void OnYearDec()
     {
-        if (!ValidateForwardPickOnly(ReferenceDate.AddYears(-1)))
-            return;
         ReferenceDate = ReferenceDate.AddYears(-1);
-        SetupVariables();
+        
     }
     public void OnMonthInc()
     {
-        if (!ValidateForwardPickOnly(ReferenceDate.AddMonths(1)))
-            return;
         ReferenceDate = ReferenceDate.AddMonths(1);
-        SetupVariables();
-
     }
     public void OnMonthDec()
     {
-        if (!ValidateForwardPickOnly(ReferenceDate.AddMonths(-1)))
-            return;
         ReferenceDate = ReferenceDate.AddMonths(-1);
-        SetupVariables();
-
     }
     public void OnDaySelected(DateTime date)
     {
+        
         SelectedDate = date;
-        ReferenceDate = date;
-        SetupVariables(); 
+        
+        
     }
     public void OnToday()
     {
-        ReferenceDate = DateTime.Today;
-        SetupVariables();
+        OnDaySelected(DateTime.Today);
     }
-    public void OnCurrentSelectedDay()
-    {
-        ReferenceDate = SelectedDate;
-        SetupVariables();
-    }
-    public DateTime GetSelectedDate()
-    {
-        return SelectedDate;
-    }
+
+ 
 }
