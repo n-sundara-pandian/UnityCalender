@@ -15,6 +15,7 @@ public class DatePicker : MonoBehaviour {
     public Text CurrentMonth;
     public Text CurrentYear;
     public string DateFormat = "dd-MM-yyyy";
+    public string MonthFormat = "MMMMM";
     public bool ForwardPickOnly = false;
     private DateTime m_SelectedDate;
 
@@ -25,6 +26,8 @@ public class DatePicker : MonoBehaviour {
         {
             if (m_SelectedDate == value)
                 return;
+            
+            Debug.LogFormat("Date changed from {0} to {1}", m_SelectedDate.ToShortDateString(), value.ToShortDateString());
             m_SelectedDate = value;
             SelectedDateText.text = value.ToString(DateFormat);
             ReferenceDate = new DateTime( value.Year, value.Month, 1);
@@ -44,7 +47,7 @@ public class DatePicker : MonoBehaviour {
             }
 
             m_ReferenceDate = value;
-            CurrentMonth.text = value.ToString("MMMMM");
+            CurrentMonth.text = value.ToString(MonthFormat);
             CurrentYear.text = value.Year.ToString();
             DisplayMonthDays();
         }
@@ -59,11 +62,16 @@ public class DatePicker : MonoBehaviour {
         
     }
  
+    public string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+        return value.Length <= maxLength ? value : value.Substring(0, maxLength); 
+    }
 
     public void GenerateDaysNames(){
         int dayOfWeek = (int)startDayOfWeek;
         for (int d = 1; d <= 7; d++){       
-            string day_name = Enum.GetName(typeof(DayOfWeek), dayOfWeek);
+            string day_name = Truncate(Enum.GetName(typeof(DayOfWeek), dayOfWeek), 3);
             var DayNameLabel = Instantiate(DayNameLabelTemplate);
             DayNameLabel.transform.SetParent(DayContainer.transform);
             DayNameLabel.GetComponentInChildren<Text>().text = day_name;
@@ -87,41 +95,32 @@ public class DatePicker : MonoBehaviour {
     {
         int monthdays = DateTime.DaysInMonth(ReferenceDate.Year, ReferenceDate.Month);
  
-        int day_index = 1;
-        DateTime day_datetime = new DateTime(ReferenceDate.Year, ReferenceDate.Month, day_index);
+        DateTime day_datetime = new DateTime(ReferenceDate.Year, ReferenceDate.Month, 1);
 
         int dayOffset = (int)day_datetime.DayOfWeek - (int)startDayOfWeek;
         if ((int)day_datetime.DayOfWeek < (int)startDayOfWeek)
         {
-            dayOffset = 7 + dayOffset;
+            dayOffset = (7 + dayOffset);
         }
-
+        day_datetime = day_datetime.AddDays(-dayOffset); 
+        DayContainer.GetComponent<ToggleGroup>().allowSwitchOff = true;
         for (int i = 0; i < DayToggles.Length; i++)
         {
-            if (day_index <= monthdays)
-            {
-                day_datetime = day_datetime.AddDays(1);
-            }
-            
-            if ((i < dayOffset)
-                || day_index > monthdays){
-                SetDayToggleEmpty(DayToggles[i]);
-            }else{
-          
-                SetDayToggle(DayToggles[i], day_datetime);
-                day_index++;
-            }
+            SetDayToggle(DayToggles[i], day_datetime);
+            day_datetime = day_datetime.AddDays(1);
         }        
+        DayContainer.GetComponent<ToggleGroup>().allowSwitchOff = false;
     }
 
     void SetDayToggleEmpty(DayToggle dayToggle){
         dayToggle.interactable = false;
         dayToggle.isOn = false;
-        dayToggle.ClearText();
+        //dayToggle.dateTime = null;
+        //dayToggle.ClearText();
     }
 
     void SetDayToggle(DayToggle dayToggle, DateTime toggleDate){
-        dayToggle.interactable = toggleDate >= DateTime.Today;
+        dayToggle.interactable = (!ForwardPickOnly || toggleDate >= DateTime.Today) && toggleDate.Month == ReferenceDate.Month && toggleDate.Year == ReferenceDate.Year;
         dayToggle.SetText(toggleDate.Day.ToString());
         dayToggle.isOn = SelectedDate == toggleDate;
         dayToggle.dateTime = toggleDate;
@@ -144,10 +143,12 @@ public class DatePicker : MonoBehaviour {
     {
         ReferenceDate = ReferenceDate.AddMonths(-1);
     }
-    public void OnDaySelected(DateTime date)
+    public void OnDaySelected(DateTime? date)
     {
-        
-        SelectedDate = date;
+        Debug.Log("OnDaySelected");
+       if (date != null){
+        SelectedDate = (DateTime)date;
+       } 
         
         
     }

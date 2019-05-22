@@ -6,8 +6,8 @@ using System.Collections;
 
 public class DayToggle : Toggle {
 
-    public DateTime dateTime;
-    public class OnDateTimeSelectedEvent : UnityEvent<DateTime> { }
+    public DateTime? dateTime;
+    public class OnDateTimeSelectedEvent : UnityEvent<DateTime?> { }
     public OnDateTimeSelectedEvent onDateSelected = new OnDateTimeSelectedEvent();
 
     protected override void Start()
