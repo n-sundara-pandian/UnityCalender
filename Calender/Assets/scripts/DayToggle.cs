@@ -8,15 +8,48 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(EventTrigger))]
 public class DayToggle : Toggle {
 
+    private DateTime? m_dateTime;
+    public DateTime? dateTime
+    {
+        get
+        {
+            return m_dateTime;
+        }
+        set
+        {
+            m_dateTime = value;
+            var todayMarker = GetTodayMarker();
+            if (todayMarker != null)
+            {
+                Debug.Log("the fuck");
+                GetTodayMarker().gameObject.SetActive(m_dateTime != null && DateTime.Today.IsSameDate((DateTime)m_dateTime));
+            }
+            
+        }
+    }
 
-    public DateTime? dateTime;
     public class OnDateTimeSelectedEvent : UnityEvent<DateTime?> { }
     public OnDateTimeSelectedEvent onDateSelected = new OnDateTimeSelectedEvent();
     bool m_clicked = false;
-    public Color m_todayColor = Color.green;
+
+    // Cannot make serializable field when inheriting toggle
+    private Image GetTodayMarker()
+    {
+        Component[] transforms = GetComponentsInChildren(typeof(Transform), true);
+
+        foreach (Transform transform in transforms)
+        {
+            if (transform.gameObject.name == "Today Marker")
+            {
+                return transform.gameObject.GetComponent<Image>();
+            }
+        }
+        return null;
+    }
     protected override void Start()
     {
         base.Start();
+
         onValueChanged.AddListener(onToggleValueChanged);
         EventTrigger trigger = GetComponent<EventTrigger>();
         EventTrigger.Entry entry = new EventTrigger.Entry();
