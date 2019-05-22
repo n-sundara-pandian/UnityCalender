@@ -10,10 +10,14 @@ public class DatePicker : MonoBehaviour {
 
     public DayToggle DayToggleTemplate;
     public Text DayNameLabelTemplate;
-    public GridLayoutGroup DayContainer;
-    public Text SelectedDateText;
-    public Text CurrentMonth;
-    public Text CurrentYear;
+    [SerializeField]
+    private GridLayoutGroup DayContainer;
+    [SerializeField]
+    private Text SelectedDateText;
+    [SerializeField]
+    private Text CurrentMonth;
+    [SerializeField]
+    private Text CurrentYear;
     public string DateFormat = "dd-MM-yyyy";
     public string MonthFormat = "MMMMM";
     public bool ForwardPickOnly = false;
@@ -144,10 +148,13 @@ public class DatePicker : MonoBehaviour {
         }
     }
 
-    public void OnDaySelected(DateTime? date)
-    {
-        SelectedDate = (DateTime)date;
+    public void SetSelectedDate(DateTime date){
+        SelectedDate = date;
         SwitchToSelectedDate();
+    }
+    void OnDaySelected(DateTime? date)
+    {
+        SetSelectedDate((DateTime)date);
     }
 
     public void SwitchToSelectedDate(){
