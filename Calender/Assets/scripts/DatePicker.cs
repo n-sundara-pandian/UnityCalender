@@ -25,7 +25,7 @@ public class DatePicker : MonoBehaviour {
         private set
         {
             m_SelectedDate = value;
-            Debug.LogFormat("New Selected Date: {0}", value.ToShortDateString());
+            SelectedDateText.text = m_SelectedDate.ToString(DateFormat);
         }
     }
     DateTime m_ReferenceDate;
@@ -35,15 +35,9 @@ public class DatePicker : MonoBehaviour {
             return m_ReferenceDate;
         }set{
             m_ReferenceDate = DateTimeHelpers.GetYearMonthStart(value);
-            Debug.LogFormat("New Reference Date: {0}", value.ToShortDateString());
+            CurrentYear.text = m_ReferenceDate.Year.ToString();
+            CurrentMonth.text = m_ReferenceDate.ToString(MonthFormat);
         }
-    }
-
-    public void UpdateUI(bool refresh = false){
-        SelectedDateText.text = SelectedDate.ToString(DateFormat);
-        CurrentMonth.text = ReferenceDateTime.ToString(MonthFormat);
-        CurrentYear.text = ReferenceDateTime.Year.ToString();
-        DisplayMonthDays(refresh);
     }
 
     public DayOfWeek startDayOfWeek;
@@ -54,7 +48,8 @@ public class DatePicker : MonoBehaviour {
 
         SelectedDate = DateTime.Today;
         ReferenceDateTime = SelectedDate;
-        UpdateUI(true);
+
+        DisplayMonthDays(true);
     }
  
     public string Truncate(string value, int maxLength)
@@ -127,37 +122,42 @@ public class DatePicker : MonoBehaviour {
     public void YearInc_onClick()
     {
         ReferenceDateTime = ReferenceDateTime.AddYears(1);
-        UpdateUI(false);
+            DisplayMonthDays(false);
     }
     public void YearDec_onClick()
     {
-        if (!ReferenceDateTime.IsCurrentYearMonth() && !ReferenceDateTime.IsPastYearMonth()){
+        if (!ForwardPickOnly ||( !ReferenceDateTime.IsCurrentYearMonth() && !ReferenceDateTime.IsPastYearMonth())){
             ReferenceDateTime = ReferenceDateTime.AddYears(-1);
-            UpdateUI(false);
+            DisplayMonthDays(false);
         }
     }
     public void MonthInc_onClick()
     {
         ReferenceDateTime = ReferenceDateTime.AddMonths(1);
-        UpdateUI(false);
+            DisplayMonthDays(false);
     }
     public void MonthDec_onClick()
     {
-        if (!ReferenceDateTime.IsCurrentYearMonth() && !ReferenceDateTime.IsPastYearMonth()){
+        if (!ForwardPickOnly ||( !ReferenceDateTime.IsCurrentYearMonth() && !ReferenceDateTime.IsPastYearMonth())){
             ReferenceDateTime = ReferenceDateTime.AddMonths(-1);
-            UpdateUI(false);
+            DisplayMonthDays(false);
         }
     }
 
     public void OnDaySelected(DateTime? date)
     {
         SelectedDate = (DateTime)date;
+        SwitchToSelectedDate();
+    }
+
+    public void SwitchToSelectedDate(){
+        ReferenceDateTime = SelectedDate;
+        DisplayMonthDays(false);
     }
     public void Today_onClick()
     {
-        SelectedDate = DateTime.Today;
-        ReferenceDateTime = SelectedDate;
-        UpdateUI(false);
+        ReferenceDateTime = DateTime.Today;
+        DisplayMonthDays(false);
     }
 
  
