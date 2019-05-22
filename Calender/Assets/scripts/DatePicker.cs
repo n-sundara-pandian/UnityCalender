@@ -55,7 +55,7 @@ public class DatePicker : MonoBehaviour {
 
         DisplayMonthDays(true);
     }
- 
+
     public string Truncate(string value, int maxLength)
     {
         if (string.IsNullOrEmpty(value)) return value;
@@ -84,9 +84,19 @@ public class DatePicker : MonoBehaviour {
             DayToggles[i] = DayToggle;
         }
     }
+    private void OnDisable()
+    {
+        //DayContainer.GetComponent<ToggleGroup>().allowSwitchOff = false;
+    }
+
+    private void OnEnable()
+    {
+        //DayContainer.GetComponent<ToggleGroup>().allowSwitchOff = true;
+    }
 
     private void DisplayMonthDays(bool refresh = false)
     {
+        Debug.Log("Display Months");
         if (!refresh && m_DisplayDate.IsSameYearMonth(ReferenceDateTime)){
             return;
         }
@@ -102,13 +112,13 @@ public class DatePicker : MonoBehaviour {
             dayOffset = (7 + dayOffset);
         }
         day_datetime = day_datetime.AddDays(-dayOffset); 
-        DayContainer.GetComponent<ToggleGroup>().allowSwitchOff = true;
+        //DayContainer.GetComponent<ToggleGroup>().allowSwitchOff = true;
         for (int i = 0; i < DayToggles.Length; i++)
         {
             SetDayToggle(DayToggles[i], day_datetime);
             day_datetime = day_datetime.AddDays(1);
         }        
-        DayContainer.GetComponent<ToggleGroup>().allowSwitchOff = false;
+        //DayContainer.GetComponent<ToggleGroup>().allowSwitchOff = false;
     }
 
     void SetDayToggle(DayToggle dayToggle, DateTime toggleDate){
