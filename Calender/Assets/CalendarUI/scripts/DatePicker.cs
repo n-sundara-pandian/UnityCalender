@@ -166,7 +166,7 @@ public class DatePicker : MonoBehaviour {
     public void SwitchToSelectedDate(){
         if(SelectedDate != null){
             var sd = (DateTime)SelectedDate;
-            if(!sd.IsSameYearMonth(ReferenceDateTime )){
+            if(!sd.IsSameYearMonth(m_DisplayDate)){
                 ReferenceDateTime = (DateTime)SelectedDate;
                 if(m_dayTogglesGenerated){
                     DisplayMonthDays(false);
