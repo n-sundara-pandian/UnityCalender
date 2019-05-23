@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections;
 using UnityEngine.EventSystems;
+using RSToolkit.Helpers;
 
 [RequireComponent(typeof(EventTrigger))]
 public class DayToggle : Toggle {
@@ -52,13 +53,13 @@ public class DayToggle : Toggle {
         onValueChanged.AddListener(onToggleValueChanged);
         EventTrigger trigger = GetComponent<EventTrigger>();
         EventTrigger.Entry entry = new EventTrigger.Entry();
-        entry.eventID = EventTriggerType.PointerDown;
-        entry.callback.AddListener((data) => { OnPointerDownDelegate((PointerEventData)data); });
+        entry.eventID = EventTriggerType.PointerUp;
+        entry.callback.AddListener((data) => { OnPointerUpDelegate((PointerEventData)data); });
         trigger.triggers.Add(entry);
     }
 
-    // User trigger because ValueCHanged is triggered when toggle is set inactive
-    private void OnPointerDownDelegate(PointerEventData data)
+    // User trigger because ValueChanged is triggered when toggle is set inactive
+    private void OnPointerUpDelegate(PointerEventData data)
     {
         if (isActiveAndEnabled && IsInteractable())
         {
@@ -79,9 +80,9 @@ public class DayToggle : Toggle {
     {
         if (m_clicked && !value)
         {
-            m_clicked = false;
             isOn = true;
         }
+        m_clicked = false;
     }
 
 
