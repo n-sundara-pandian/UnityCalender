@@ -14,9 +14,11 @@ public static class DateTimeHelpers{
     public static DateTime GetYearMonthStart(int Year, int Month){
         return new DateTime(Year, Month, 1);
     }
-
+    public static bool IsCurrentYear(this DateTime value){
+        return (value.Year == DateTime.Today.Year);
+    }
     public static bool IsCurrentYearMonth(this DateTime value){
-        return (value.Year == DateTime.Today.Year && value.Month == DateTime.Today.Month);
+        return (IsCurrentYear(value) && value.Month == DateTime.Today.Month);
     }
 
     public static bool IsPastYearMonth(this DateTime value){

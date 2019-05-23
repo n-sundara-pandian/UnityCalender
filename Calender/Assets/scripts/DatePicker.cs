@@ -96,7 +96,6 @@ public class DatePicker : MonoBehaviour {
 
     private void DisplayMonthDays(bool refresh = false)
     {
-        Debug.Log("Display Months");
         if (!refresh && m_DisplayDate.IsSameYearMonth(ReferenceDateTime)){
             return;
         }
@@ -140,7 +139,7 @@ public class DatePicker : MonoBehaviour {
     }
     public void YearDec_onClick()
     {
-        if (!ForwardPickOnly ||( !ReferenceDateTime.IsCurrentYearMonth() && !ReferenceDateTime.IsPastYearMonth())){
+        if (!ForwardPickOnly || (!ReferenceDateTime.IsCurrentYear() && !ReferenceDateTime.IsPastYearMonth())){
             ReferenceDateTime = ReferenceDateTime.AddYears(-1);
             DisplayMonthDays(false);
         }

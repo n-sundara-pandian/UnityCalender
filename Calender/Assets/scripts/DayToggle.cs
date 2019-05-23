@@ -21,7 +21,6 @@ public class DayToggle : Toggle {
             var todayMarker = GetTodayMarker();
             if (todayMarker != null)
             {
-                Debug.Log("the fuck");
                 GetTodayMarker().gameObject.SetActive(m_dateTime != null && DateTime.Today.IsSameDate((DateTime)m_dateTime));
             }
             
